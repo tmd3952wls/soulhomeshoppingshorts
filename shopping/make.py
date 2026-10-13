@@ -26,7 +26,7 @@ FONT = ROOT.parent.parent / 'assets/fonts/Paperlogy-7Bold.ttf'
 CAPTION_SIZE = 76        # 자막 글자 크기
 CAPTION_Y = 0.61         # 자막 높이 (0 = 맨 위, 1 = 맨 아래)
 CAPTION_WIDTH = 0.86     # 이 폭을 넘으면 두 줄로 나눈다
-LINE_GAP = 0.08          # 줄과 줄 사이에 남기는 숨 쉴 틈(초)
+LINE_GAP = 0.0           # 줄과 줄 사이에 남기는 숨 쉴 틈(초). 0이면 앞 문장이 끝나자마자 다음 문장
 SHORTEST, LONGEST = 1.0, 2.0  # 컷 길이 한계(초)
 AD_TEXT, AD_X, AD_Y, AD_SIZE = '[광고]', 39, 44, 40  # 영상 내내 떠 있는 광고 표기: 글, 오른쪽·위에서의 거리(픽셀), 크기
 CAPTION_SHORTEST = 0.4   # 자막 한 조각이 화면에 머무는 가장 짧은 시간(초)
