@@ -125,13 +125,14 @@ def analyze(video, cache=ROOT / 'work/subtitles.json'):
 if __name__ == '__main__':
     sys.stdout.reconfigure(encoding='utf-8')
     for clip in sorted((ROOT / 'clips').glob('*.mp4')):
-        result = analyze(clip)
-        print(clip.name)
+        cleaned = clip.parent / 'cleaned' / clip.name
+        result = analyze(cleaned if cleaned.exists() else clip)
+        print(clip.name, '(Vmake로 지운 파일 사용)' if cleaned.exists() else '')
         for item in result['hidden']:
             print(f"   {item['kind']} \"{item['sample']}\" 위치 {[round(v, 3) for v in item['box']]}")
         if result['vmake']:
-            print('   → 확대로는 가릴 수 없음: Vmake로 지워야 함')
+            print('   → 확대로는 가릴 수 없음: Vmake로 지운 파일을 clips/cleaned에 같은 이름으로 넣어야 함')
         elif result['crop']:
-            print(f"   → {result['crop'][0]}배 확대, 왼쪽 {result['crop'][1]}, 위 {result['crop'][2]}")
+            print(f"   → {result['crop'][0]}배 확대로 가림 (더 선명하게 하려면 Vmake로 지운 파일을 clips/cleaned에)")
         else:
             print('   → 가릴 글자 없음')

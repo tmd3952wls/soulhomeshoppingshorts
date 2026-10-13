@@ -28,8 +28,14 @@ CAPTION_Y = 0.61         # 자막 높이 (0 = 맨 위, 1 = 맨 아래)
 CAPTION_WIDTH = 0.86     # 이 폭을 넘으면 두 줄로 나눈다
 LINE_GAP = 0.08          # 줄과 줄 사이에 남기는 숨 쉴 틈(초)
 SHORTEST, LONGEST = 1.0, 2.0  # 컷 길이 한계(초)
-AD_TEXT, AD_X, AD_Y, AD_SIZE = '[광고]', 39, 44, 40  # 영상 내내 떠 있는 광고 표기: 글, 왼쪽·위에서의 거리(픽셀), 크기
+AD_TEXT, AD_X, AD_Y, AD_SIZE = '[광고]', 39, 44, 40  # 영상 내내 떠 있는 광고 표기: 글, 오른쪽·위에서의 거리(픽셀), 크기
 CAPTION_SHORTEST = 0.4   # 자막 한 조각이 화면에 머무는 가장 짧은 시간(초)
+
+
+def source(video):
+    """Vmake로 자막을 지운 파일이 clips/cleaned에 같은 이름으로 있으면 그것을 쓴다."""
+    cleaned = CLIPS / 'cleaned' / video
+    return cleaned if cleaned.exists() else CLIPS / video
 
 
 def caption(text, target):
@@ -91,14 +97,14 @@ def render(lines, voices, output, work):
         for (text, video, start), length in zip(cuts, split(frames, [cut[0] for cut in cuts], round(SHORTEST * FPS))):
             seconds = length / FPS
             total += seconds
-            found = subtitles.analyze(CLIPS / video)
+            found = subtitles.analyze(source(video))
             if found['vmake']:
-                raise RuntimeError(f'{video}: 글자를 확대로 가릴 수 없습니다. Vmake로 지운 영상으로 바꿔 주세요.')
+                raise RuntimeError(f'{video}: 글자를 확대로 가릴 수 없습니다. Vmake로 지운 파일을 clips/cleaned에 같은 이름으로 넣어 주세요.')
             crop = ''
             if found['crop']:
                 _, left, top, wide, tall = found['crop']
                 crop = f'crop=iw*{wide}:ih*{tall}:iw*{left}:ih*{top},'
-            chain = (f'[{add(CLIPS / video)}:v]trim=start={start:.3f},setpts=PTS-STARTPTS,fps={FPS},'
+            chain = (f'[{add(source(video))}:v]trim=start={start:.3f},setpts=PTS-STARTPTS,fps={FPS},'
                      f'trim=duration={seconds:.4f},{crop}scale={W}:{H}:force_original_aspect_ratio=increase:flags=lanczos,'
                      f'crop={W}:{H},setsar=1[c{i}_0]')
             pieces, begin = text.split(' / '), 0
@@ -115,7 +121,7 @@ def render(lines, voices, output, work):
     print(f'합계 {total:.1f}초, {i}컷')
     badge = work / 'ad.png'
     image = Image.new('RGBA', (W, H), (0, 0, 0, 0))
-    ImageDraw.Draw(image).text((AD_X, AD_Y), AD_TEXT, font=ImageFont.truetype(str(FONT), AD_SIZE), anchor='lt',
+    ImageDraw.Draw(image).text((W - AD_X, AD_Y), AD_TEXT, font=ImageFont.truetype(str(FONT), AD_SIZE), anchor='rt',
                                fill='white', stroke_width=4, stroke_fill='black')
     image.save(badge)
     filters.append(f"{''.join(names)}concat=n={i}:v=1:a=0[joined];[joined][{add(badge)}:v]overlay=0:0[out]")
@@ -151,4 +157,4 @@ if __name__ == '__main__':
     credits, voices = asyncio.run(speak('쇼핑-녹제거가루', spoken, ROOT / 'work/voice-rust', go))
     print(f'음성 견적 {credits} 크레딧')
     if voices:
-        render(RUST_POWDER, voices, ROOT / 'out/rust-powder-v5.mp4', ROOT / 'work')
+        render(RUST_POWDER, voices, ROOT / 'out/rust-powder-v6.mp4', ROOT / 'work')

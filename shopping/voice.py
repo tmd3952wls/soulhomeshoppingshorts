@@ -22,14 +22,17 @@ MODEL = 'drama-3-preview'
 async def speak(name, lines, folder, go=False):
     """lines의 각 줄을 음성 파일로 만든다. 돌려주는 값: (견적 크레딧, 파일 목록 또는 None)."""
     folder.mkdir(parents=True, exist_ok=True)
+    state_path = folder / 'project.json'
+    state = json.loads(state_path.read_text(encoding='utf-8')) if state_path.exists() else {}
+    ready = [folder / f'line-{i:02}.mp3' for i in range(len(lines))]
+    if state.get('done') == lines and all(path.exists() for path in ready):
+        return 0, ready  # 이미 받아 둔 음성이면 Fish에 접속하지 않는다
     fish = Fish()
     async with fish.session() as session:
         async def call(tool, **args):
             return Fish.parse(await session.call_tool(tool, args))
 
         await call('studio_help', topic='quickstart')
-        state_path = folder / 'project.json'
-        state = json.loads(state_path.read_text(encoding='utf-8')) if state_path.exists() else {}
         if state and len(state['lines']) == len(lines) and state['lines'] != lines:
             # 몇 줄만 고친 경우: 바뀐 줄만 고쳐 쓰면 그 줄만 다시 녹음되고 나머지 목소리는 그대로 남는다.
             value = await call('studio_read_blocks', project_id=state['project'], chapter=state['chapter'])
@@ -82,4 +85,6 @@ async def speak(name, lines, folder, go=False):
             path = folder / f'line-{i:02}.mp3'
             await fish.download(block['audio_url'], path)
             files.append(path)
+        state['done'] = lines
+        state_path.write_text(json.dumps(state, ensure_ascii=False, indent=1), encoding='utf-8')
         return quote, files
