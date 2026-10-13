@@ -1,0 +1,7 @@
+# 영상·음성 같은 큰 파일과 남의 원본 영상은 올리지 않는다
+samples/
+shopping/clips/
+shopping/out/
+shopping/work/
+__pycache__/
+*.pyc
