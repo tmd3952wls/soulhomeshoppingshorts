@@ -16,7 +16,7 @@ sys.path.insert(0, str(REPO))
 from studio.fish import Fish
 
 VOICE_ID = '4a81bbbb5cd44f22922bf934cb93b369'  # 일반여성2
-MODEL = 'drama-3-preview'
+MODEL = 'drama-3'
 
 
 async def speak(name, lines, folder, go=False):
